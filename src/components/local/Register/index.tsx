@@ -13,10 +13,10 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
+import { redirect } from "next/navigation";
 
 export const FormSchema = z
   .object({
@@ -68,9 +68,15 @@ export default function FormPage() {
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
+
       // Process response here
-      console.log("Registration Successful", response);
-      toast({ title: "Registration Successful" });
+  
+      const responseData = await response.json();
+      const userKey = responseData.key;
+      if (userKey) {
+        //redirect to login page
+        redirect("/login");
+      }
     } catch (error: unknown) {
       console.error("Registration Failed:", error);
       toast({
