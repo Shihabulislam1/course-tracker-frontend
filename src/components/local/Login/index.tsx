@@ -3,8 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { redirect } from "next/navigation"; // Import for navigation
-import { getSession } from "@/lib/auth";
+import { redirect } from "next/navigation"; //
 import { login } from "@/lib/login";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,7 +27,7 @@ export const LoginSchema = z.object({
     message: "Password must be at least 8 characters.",
   }),
 });
-type LoginFormData = z.infer<typeof LoginSchema>;
+// type LoginFormData = z.infer<typeof LoginSchema>;
 
 export default function LoginPage() {
   const form = useForm({
@@ -43,7 +42,7 @@ export default function LoginPage() {
   return (
     <Form {...form}>
       <form
-        className="w-2/3 space-y-6 bg-white"
+        className=" space-y-6 bg-white border-2 border-primary px-12 py-16 rounded-lg shadow-lg text-md dark:text-gray-200 dark:bg-primary/15 dark:border-primary bg-opacity-50 "
         action={async (formData) => {
           await login(formData);
           redirect("/dashboard");

@@ -70,7 +70,7 @@ export default function FormPage() {
       }
 
       // Process response here
-  
+
       const responseData = await response.json();
       const userKey = responseData.key;
       if (userKey) {
@@ -89,14 +89,14 @@ export default function FormPage() {
   return (
     <Form {...form}>
       <form
-        className="w-2/3 space-y-6 bg-white"
+        className="w-full flex-grow space-y-6 bg-white border-2 border-primary/15 px-12 py-8 rounded-lg dark:bg-primary/15 dark:border-primary bg-opacity-50 shadow-lg text-md dark:text-gray-200 dark:shadow-custom-dark"
         onSubmit={form.handleSubmit(onSubmit)}
       >
         <FormField
           control={form.control}
           name="username"
           render={({ field }) => (
-            <FormItem>
+            <FormItem >
               <FormLabel>Username</FormLabel>
               <FormControl>
                 <Input placeholder="Username" {...field} />
@@ -147,7 +147,12 @@ export default function FormPage() {
             </FormItem>
           )}
         />
-        <Button type="submit">Submit</Button>
+        <Button
+          type="submit"
+          className=" w-full text-center   text-lg text-gray-50 dark:text-gray-900 bg-primary hover:bg-primary/95 py-5 font-semibold"
+        >
+          Sign Up
+        </Button>
       </form>
     </Form>
   );

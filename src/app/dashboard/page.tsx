@@ -12,7 +12,6 @@ const page = () => {
           await logout();
         }}
       >
-        <button type="submit">Logout</button>
         </form>
     </>
     

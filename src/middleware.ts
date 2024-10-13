@@ -1,11 +1,15 @@
-// middleware.ts
+
 import { NextRequest, NextResponse } from "next/server";
-import { getSession,updateSession } from "@/lib/auth"; // Ensure this imports correctly
+import { getSession, updateSession } from "@/lib/auth"; // Ensure this imports correctly
 import { NextURL } from "next/dist/server/web/next-url";
 
 export async function middleware(request: NextRequest) {
-  const session = await getSession();
+  // Check if in development mode
+  if (process.env.NODE_ENV === "development") {
+    return NextResponse.next(); // Allow everything in development mode
+  }
 
+  const session = await getSession();
   const { pathname } = request.nextUrl;
 
   // Define the paths that you want to protect
@@ -20,3 +24,4 @@ export async function middleware(request: NextRequest) {
   // If session exists, update the session
   return await updateSession(request);
 }
+
