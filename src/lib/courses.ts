@@ -1,6 +1,5 @@
 import { API_URL } from "@/constants";
-import { becrypt } from "@/lib/auth";
-import Cookies from "js-cookie";
+import { Session } from "inspector/promises";
 
 export interface courseDataTypes {
   name: string;
@@ -36,19 +35,21 @@ export interface CourseType {
   unit: string;
 }
 
-export const clientCookies = (): string | null => {
-  return Cookies.get("session") || null;
-};
-
 export const fetchCourseCategories = async (
-  token: String
+  token: string,
+  csrfToken: string,
+  sessionId: string
 ): Promise<CourseCategories[]> => {
   const response = await fetch(`${API_URL}/courses/categories/?page=1`, {
     headers: {
-      Authorization: `Bearer ${token}`, // Include the token in the headers
+      "Content-Type": "application/json",
+      "WW-Authenticate": `${token}`,
+      Cookie: `csrftoken=${csrfToken}; sessionid=${sessionId}`,
     },
   });
   if (!response.ok) {
+    const errorResponse = await response.json();
+    console.error("Network response was not ok", errorResponse);
     throw new Error("Network response was not ok");
   }
   const responseData = await response.json();
@@ -56,33 +57,68 @@ export const fetchCourseCategories = async (
 };
 
 export const fetchCourseTypes = async (
-  token: String
+  token: string,
+  csrfToken: string,
+  sessionId: string
 ): Promise<CourseType[]> => {
   const response = await fetch(`${API_URL}/courses/types/?page=1`, {
     headers: {
-      Authorization: `Bearer ${token}`, // Include the token in the headers
+      "Content-Type": "application/json",
+      "WW-Authenticate": `${token}`,
+      Cookie: `csrftoken=${csrfToken}; sessionid=${sessionId}`,
     },
   });
   if (!response.ok) {
+    const errorResponse = await response.json();
+    console.error("Network response was not ok", errorResponse);
     throw new Error("Network response was not ok");
   }
   const responseData = await response.json();
   return responseData.results as CourseType[];
 };
 
-export const handleCourseUpdate = async (
-  courseData: courseDataTypes
-): Promise<ReturnedCourse> => {
-  const response = await fetch(`${API_URL}/courses/`, {
-    method: "POST",
+//write a function to get the user id
+export const getUserID = async (
+  session: string,
+  csrfToken: string,
+  sessionId: string
+): Promise<string> => {
+  const response = await fetch(`${API_URL}/auth/user/`, {
     headers: {
       "Content-Type": "application/json",
+      "WW-Authenticate": `${session}`,
+      Cookie: `csrftoken=${csrfToken}; sessionid=${sessionId}`,
     },
-    body: JSON.stringify(courseData),
   });
   if (!response.ok) {
     throw new Error("Network response was not ok");
   }
   const responseData = await response.json();
-  return responseData as ReturnedCourse;
+  return responseData.pk as string;
 };
+
+// export const handleCourseUpdate = async (
+//   session: string,
+//   csrfToken: string,
+//   sessionId: string,
+//   courseData: courseDataTypes
+// ): Promise<ReturnedCourse> => {
+//   const response = await fetch(`${API_URL}/courses/`, {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json",
+//       "Authorization": `Bearer ${session}`,
+//       "X-CSRFToken": csrfToken,
+//       Cookie: `csrftoken=${csrfToken}; sessionid=${sessionId}`,
+//     },
+//     credentials: "include",  // Include credentials (cookies) with the request
+//     body: JSON.stringify(courseData),
+//   });
+
+//   if (!response.ok) {
+//     throw new Error("Network response was not ok");
+//   }
+
+//   const responseData = await response.json();
+//   return responseData as ReturnedCourse;
+// };

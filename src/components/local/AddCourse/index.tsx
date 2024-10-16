@@ -1,11 +1,9 @@
 "use client";
 import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { redirect } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { API_URL } from "@/constants";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -20,20 +18,14 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  fetchCourseCategories,
-  fetchCourseTypes,
-  handleCourseUpdate,
-  CourseType,
-  CourseCategories,
   ReturnedCourse,
-  clientCookies,
+  CourseCategories,
 } from "@/lib/courses";
 
 export const FormSchema = z.object({
@@ -46,42 +38,22 @@ export const FormSchema = z.object({
   url: z.string().url({
     message: "Please enter a valid url.",
   }),
-  required_unit: z.number().int().positive(),
-  user: z.string(),
+  required_unit: z.coerce.number().min(1, "Required unit must be at least 1"),
   course_type: z.string(),
   course_category: z.string(),
 });
 
 type FormData = z.infer<typeof FormSchema>;
-interface AddCourseProps {
-  setResponseDataCourse: (data: ReturnedCourse) => void;
-}
 
-const AddCourse: React.FC<AddCourseProps> = ({ setResponseDataCourse }) => {
-  const [courseTypes, setCourseTypes] = useState<CourseType[]>([]);
-  const [courseCategorie, setCourseCategorie] = useState<CourseCategories[]>(
-    []
-  );
-  const [session, setSession] = useState("");
-
-  useEffect(() => {
-    const fetchAndSetCourseTypes = async (token: String) => {
-      const courseTypesResults = await fetchCourseTypes(token);
-      setCourseTypes(courseTypesResults);
-    };
-    const fetchAndSetCourseCategories = async (token: String) => {
-      const courseCategoriesResults = await fetchCourseCategories(token);
-      setCourseCategorie(courseCategoriesResults);
-    };
-    const getCookie = clientCookies();
-    if (getCookie) {
-      setSession(getCookie);
-      fetchAndSetCourseTypes(session);
-      fetchAndSetCourseCategories(session);
-    } else {
-      redirect("/login");
-    }
-  }, []);
+const AddCourse = ({
+  courseTypes,
+  courseCategories,
+}: {
+  courseTypes: CourseCategories[];
+  courseCategories: CourseCategories[];
+}) => {
+  const [responseDataCourse, setResponseDataCourse] =
+    useState<ReturnedCourse | null>(null);
 
   const form = useForm({
     resolver: zodResolver(FormSchema),
@@ -90,7 +62,6 @@ const AddCourse: React.FC<AddCourseProps> = ({ setResponseDataCourse }) => {
       description: "",
       url: "",
       required_unit: 0,
-      user: "",
       course_type: "",
       course_category: "",
     },
@@ -105,19 +76,35 @@ const AddCourse: React.FC<AddCourseProps> = ({ setResponseDataCourse }) => {
       course_type,
       course_category,
     } = data;
+
     const inData = {
       name,
       description,
       url,
       required_unit,
-      user: session,
       course_type,
       course_category,
     };
 
     try {
-      const resposeCourse = await handleCourseUpdate(inData);
-      setResponseDataCourse(resposeCourse);
+      // Send the request to the Next.js route handler
+      const responseCourse = await fetch("/api/course-update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(inData),
+      });
+
+      // Handle the response
+      const responseCourseData = await responseCourse.json();
+
+      if (responseCourse.ok) {
+        // Set the response data to state if request was successful
+        setResponseDataCourse(responseCourseData?.data);
+      } else {
+        console.error("Error submitting course:", responseCourseData.error);
+      }
     } catch (error) {
       console.log("Course Error", error);
     }
@@ -127,7 +114,7 @@ const AddCourse: React.FC<AddCourseProps> = ({ setResponseDataCourse }) => {
     <Form {...form}>
       <form
         className="w-full flex-grow space-y-6 bg-white border-2 border-primary/15 px-12 py-8 rounded-lg dark:bg-primary/15 dark:border-primary bg-opacity-50 shadow-lg text-md dark:text-gray-200 dark:shadow-custom-dark"
-        //   {onSubmit={form.handleSubmit(onSubmit)}}
+        onSubmit={form.handleSubmit(onSubmit)}
       >
         <FormField
           control={form.control}
@@ -179,9 +166,9 @@ const AddCourse: React.FC<AddCourseProps> = ({ setResponseDataCourse }) => {
               <FormLabel>Required Unit</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="Enter units you want to finish."
+                  type="number"
+                  placeholder="Enter required units"
                   {...field}
-                  type="password"
                 />
               </FormControl>
             </FormItem>
@@ -201,9 +188,9 @@ const AddCourse: React.FC<AddCourseProps> = ({ setResponseDataCourse }) => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectLabel>Units</SelectLabel>
+                      {/* <SelectLabel>Units</SelectLabel> */}
                       {courseTypes.map((obj) => (
-                        <SelectItem value={obj.name} key={obj.id}>
+                        <SelectItem value={obj.id} key={obj.id}>
                           {obj.name}
                         </SelectItem>
                       ))}
@@ -227,9 +214,9 @@ const AddCourse: React.FC<AddCourseProps> = ({ setResponseDataCourse }) => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectLabel>Units</SelectLabel>
-                      {courseCategorie.map((obj) => (
-                        <SelectItem value={obj.name} key={obj.id}>
+                      {/* <SelectLabel>Units</SelectLabel> */}
+                      {courseCategories.map((obj) => (
+                        <SelectItem value={obj.id} key={obj.id}>
                           {obj.name}
                         </SelectItem>
                       ))}
@@ -242,9 +229,10 @@ const AddCourse: React.FC<AddCourseProps> = ({ setResponseDataCourse }) => {
         />
         <Button
           type="submit"
+          disabled={form.formState.isSubmitting}
           className=" w-full text-center   text-lg text-gray-50 dark:text-gray-900 bg-primary hover:bg-primary/95 py-5 font-semibold"
         >
-          Submit
+          {form.formState.isSubmitting ? "Submitting..." : "Submit"}
         </Button>
       </form>
     </Form>

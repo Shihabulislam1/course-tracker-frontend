@@ -1,26 +1,39 @@
-"use client";
-
 import React from "react";
-import { useState, useEffect } from "react";
+// import { useState} from "react";
 import AddCourse from "@/components/local/AddCourse";
-import { ReturnedCourse } from "@/lib/courses";
+import { redirect } from "next/navigation";
 
-const AddCoursePage = () => {
-  const [responseDataCourse, setResponseDataCourse] = useState<ReturnedCourse>({
-    id: "",
-    name: "",
-    description: "",
-    url: "",
-    required_unit: 0,
-    created_at: "",
-    user: "",
-    course_type: "",
-    course_category: "",
-  });
+import {
+  fetchCourseCategories,
+  fetchCourseTypes,
+  getUserID,
+} from "@/lib/courses";
+import { getSession, getCsrfToken, getSessionId } from "@/lib/auth";
+
+const AddCoursePage = async () => {
+  const session = await getSession();
+  const csrfToken = await getCsrfToken();
+  const sessionId = await getSessionId();
+  if (!session) {
+    redirect("/login");
+  }
+  const courseTypesResults = await fetchCourseTypes(
+    session,
+    csrfToken,
+    sessionId
+  );
+  const courseCategoriesResults = await fetchCourseCategories(
+    session,
+    csrfToken,
+    sessionId
+  );
 
   return (
     <section>
-      <AddCourse setResponseDataCourse={setResponseDataCourse} />
+      <AddCourse
+        courseTypes={courseTypesResults}
+        courseCategories={courseCategoriesResults}
+      />
     </section>
   );
 };

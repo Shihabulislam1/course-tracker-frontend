@@ -3,7 +3,6 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { API_URL } from "@/constants";
 
-
 const secretKey = "secret";
 const key = new TextEncoder().encode(secretKey);
 
@@ -65,13 +64,28 @@ export async function logout() {
   // Destroy the session
   if (logDetails.detail === "Successfully logged out.") {
     cookies().set("session", "", { expires: new Date(0) });
+    cookies().set("csrftoken", "", { expires: new Date(0) });
+    cookies().set("sessionid", "", { expires: new Date(0) });
   }
 }
 
 export async function getSession() {
   const session = cookies().get("session")?.value;
   if (!session) return null;
-  return await decrypt(session);
+  return session;
+}
+// Function to retrieve the CSRF token from cookies
+export async function getCsrfToken() {
+  const csrfToken = cookies().get("csrftoken")?.value;
+  if (!csrfToken) return "";
+  return csrfToken; // Return the token as it doesn't need decryption
+}
+
+// Function to retrieve the session ID from cookies
+export async function getSessionId() {
+  const sessionId = cookies().get("sessionid")?.value;
+  if (!sessionId) return "";
+  return sessionId; // Return the session ID as it doesn't need decryption
 }
 
 export async function updateSession(request: NextRequest) {

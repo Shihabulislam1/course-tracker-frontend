@@ -20,9 +20,6 @@ export const LoginSchema = z.object({
   username: z.string().min(4, {
     message: "Username must be at least 4 characters.",
   }),
-  email: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
   password: z.string().min(8, {
     message: "Password must be at least 8 characters.",
   }),
@@ -34,7 +31,6 @@ export default function LoginPage() {
     resolver: zodResolver(LoginSchema),
     defaultValues: {
       username: "",
-      email: "",
       password: "",
     },
   });
@@ -61,20 +57,6 @@ export default function LoginPage() {
             </FormItem>
           )}
         />
-
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input placeholder="Email" {...field} />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-
         <FormField
           control={form.control}
           name="password"
